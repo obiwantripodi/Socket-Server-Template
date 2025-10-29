@@ -21,8 +21,11 @@
       .dot.connected { background: #16a34a; box-shadow: 0 0 8px #16a34a99; }
       .dot.disconnected { background: #b91c1c; box-shadow: 0 0 8px #b91c1c99; }
       .content { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 0; }
-      .messages { background: #121212; border: 1px solid #2a2a2a; border-radius: 10px; min-height: 64px; max-height: 20vh; overflow: hidden; padding: 10px 12px; box-shadow: inset 0 2px 0 #1f1f1f, inset 0 -3px 6px #00000099; display: grid; align-content: center; }
-      .msg { font-family: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #00ff7f; letter-spacing: 0.2px; font-size: 14px; }
+      .messages { padding: 0; }
+      .crt { position: relative; background: #0a0f0a; border: 1px solid #1b2d1b; border-radius: 8px; height: 48px; overflow: hidden; box-shadow: inset 0 0 0 1px #0f190f, 0 6px 20px #00000030; }
+      .crt::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 10px; background: linear-gradient(180deg, #29ff84, rgba(41,255,132,0.0)); opacity: 0.35; }
+      .crt .line { position: absolute; inset: 0; display: grid; align-content: center; padding: 0 12px; font-family: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #29ff84; text-shadow: 0 0 6px rgba(41,255,132,0.65), 0 0 14px rgba(41,255,132,0.35); letter-spacing: 0.25px; font-size: 15px; }
+      .crt .scan { position: absolute; inset: 0; background: repeating-linear-gradient( to bottom, rgba(0,0,0,0), rgba(0,0,0,0) 2px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px ); mix-blend-mode: multiply; pointer-events: none; opacity: 0.6; }
       .msg.self { background: #fff1f0; }
       .msg.other { background: #eef6ff; }
       .msg.system { background: #f3f4f6; color: var(--muted); font-size: 13px; }
@@ -253,6 +256,7 @@
         const [slider1, setSlider1] = useState(0.0);
         const [button, setButton] = useState(null); // 0,1,2,3 or null
         const [sliderInteracted, setSliderInteracted] = useState(false);
+        const [sentOk, setSentOk] = useState(false);
         const prevSliderRef = useRef(slider1);
 
         const wsUrl = useMemo(() => {
@@ -269,7 +273,7 @@
           try { send(JSON.stringify({ slider1: sVal, button: bVal, custom_text: txt || '' })); } catch {}
         }, [send]);
 
-        // send slider1 ONLY on actual user-led value changes (not on mount), combined with current button
+        // send slider1 ONLY on actual user-led value changes (not on mount), combined with current button/text
         useEffect(() => {
           if (!sliderInteracted) return;
           const prev = prevSliderRef.current;
@@ -278,6 +282,13 @@
             prevSliderRef.current = slider1;
           }
         }, [slider1, sliderInteracted, button, sendAll]);
+
+        // treat custom text change as value change only when button 3 is active
+        useEffect(() => {
+          if (button !== 3) return;
+          const id = setTimeout(() => { sendAll(slider1, 3, input); }, 200);
+          return () => clearTimeout(id);
+        }, [input, button]);
 
         const dotClass = 'dot ' + (status === 'connected' ? 'connected' : 'disconnected');
 
@@ -297,6 +308,14 @@
               <h1 style={{ margin: 0, textAlign: 'center', width: '100%' }}>Scenario Control</h1>
             </header>
 
+            {/* Console always on top */}
+            <div className="messages" id="messages">
+              <div className="crt">
+                <div className="line">{sentOk ? 'OK' : formatLastSelf(messages)}</div>
+                <div className="scan"></div>
+              </div>
+            </div>
+
             {/* Sliders area - mobile first */}
             <div className="sliders">
               <SliderVertical title="slider1" value={slider1} onChange={setSlider1} onInteractStart={() => setSliderInteracted(true)} haptic={haptics} sound={sound} />
@@ -308,16 +327,15 @@
               <button aria-label="Button 2" className={`btn-cassette ${button===2?'active':''}`} onClick={() => { setButton(2); sendAll(slider1, 2, input); haptics.medium(); sound.clack(); }}></button>
               <button aria-label="Custom Text" className={`btn-cassette ${button===3?'active':''}`} onClick={() => { setButton(3); sendAll(slider1, 3, input); haptics.medium(); sound.clack(); }}></button>
             </div>
-            <div className="messages" id="messages">
-              <div className="msg self">
-                {formatLastSelf(messages)}
+            {button === 3 && (
+              <div className="row">
+                <label style={{ color:'#4b5563' }}>Custom text</label>
+                <div className="actions">
+                  <input style={{ flex: 1 }} placeholder="Scrivi un messaggio..." value={input} onChange={e => setInput(e.target.value)} />
+                  <button className="primary" onClick={() => { sendAll(slider1, 3, input); sound.clack(); setSentOk(true); setTimeout(()=>setSentOk(false), 1000); }}>Invia</button>
+                </div>
               </div>
-            </div>
-
-            <div className="row">
-              <label style={{ color:'#4b5563' }}>Custom text</label>
-              <input placeholder="Scrivi un messaggio..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { sendAll(slider1, button); } }} />
-            </div>
+            )}
           </div>
         );
       }
