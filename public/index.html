@@ -15,7 +15,7 @@
       .container { max-width: 900px; margin: 0 auto; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
       .card { background: linear-gradient(180deg, #fbf4e4, #efe6d5); border: 1px solid var(--edge); border-radius: 24px; box-shadow: inset 0 2px 0 #ffffffa6, inset 0 -6px 12px #0000001f, 0 24px 40px var(--shadow); overflow: hidden; }
       header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--edge); position: sticky; top: 0; background: linear-gradient(180deg, #fbf4e4cc, #efe6d5cc); z-index: 2; box-shadow: 0 6px 14px var(--shadow); }
-      header h1 { font-size: 18px; margin: 0; letter-spacing: 0.5px; }
+      header h1 { font-size: 18px; margin: 0; letter-spacing: 1px; text-transform: uppercase; color: #4b5563; text-shadow: 0 1px 0 #ffffffc0; }
       .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
       .dot { width: 10px; height: 10px; border-radius: 999px; background: #9ca3af; box-shadow: 0 0 4px #9ca3af; }
       .dot.connected { background: #16a34a; box-shadow: 0 0 8px #16a34a99; }
@@ -53,16 +53,29 @@
       .slider-vertical .fill { position: absolute; left: 10px; right: 10px; bottom: 10px; border-radius: 12px; height: var(--fill, 0%); background: linear-gradient(180deg, #e3dac6, #d8cfbb); box-shadow: inset 0 1px 2px #ffffff80, inset 0 -8px 14px #00000029; border: 1px solid var(--edge); }
       .slider-vertical .thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 78px; height: 28px; border-radius: 10px; background: linear-gradient(180deg, #fffaf0, #e9dfca); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -2px 6px #00000033, 0 6px 14px #00000024; touch-action: none; }
       .slider-vertical .hint { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 12px; color: var(--muted); pointer-events: none; }
-      .topbar-actions { display: inline-flex; gap: 8px; align-items: center; }
-      .ghost { background: transparent; border: 1px solid rgba(148,163,184,0.3); }
+      .topbar-actions { display: inline-flex; gap: 10px; align-items: center; }
+      .hamburger { width: 38px; height: 34px; border-radius: 10px; background: linear-gradient(180deg, #fff8ea, #eee4cf); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -3px 6px #00000024; position: relative; cursor: pointer; }
+      .hamburger span { position: absolute; left: 8px; right: 8px; height: 2px; background: #6b7280; border-radius: 2px; box-shadow: 0 1px 0 #ffffff80; }
+      .hamburger span:nth-child(1){ top: 9px; }
+      .hamburger span:nth-child(2){ top: 16px; }
+      .hamburger span:nth-child(3){ top: 23px; }
 
       /* Buttons block - retro cassette skeuo */
-      .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px; }
+      .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px; }
       .btn-cassette { position: relative; padding: 16px 12px; border-radius: 12px; color: #374151; background: linear-gradient(180deg, #fff8ea, #eee4cf); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -4px 8px #00000024, 0 14px 24px #00000024; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; transition: transform 0.05s ease, box-shadow 0.15s ease; }
       .btn-cassette::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: radial-gradient(160% 120% at 50% 0, #ffffff70, transparent 40%); pointer-events: none; }
       .btn-cassette.active { background: linear-gradient(180deg, #f6edda, #e7dcc4); box-shadow: inset 0 1px 0 #ffffffa6, inset 0 3px 8px #00000033, 0 8px 16px #0000001f; }
       .btn-cassette:active { transform: translateY(2px); }
-      .btn-cassette .label { display: block; text-align: center; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; font-size: 12px; }
+      .btn-cassette .label { display: none; }
+      
+      /* Drawer console */
+      .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 350px; max-width: 86vw; background: linear-gradient(180deg, #fbf4e4, #efe6d5); border-left: 1px solid var(--edge); box-shadow: -20px 0 40px #00000026; transform: translateX(100%); transition: transform 220ms ease; z-index: 4; display: grid; grid-template-rows: auto 1fr; }
+      .drawer.open { transform: translateX(0); }
+      .drawer .scroll { padding: 12px; overflow: auto; }
+      .drawer .messages { max-height: unset; height: 100%; }
+      
+      /* Slider tactile */
+      .slider-vertical.active .thumb { box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -2px 6px #00000040, 0 8px 18px #00000030; }
       .btn-cassette .led { position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; border-radius: 999px; background: radial-gradient(circle at 30% 30%, #b91c1c, #7f1d1d); box-shadow: 0 0 8px #b91c1c88; opacity: 0.9; transition: background 0.2s ease, box-shadow 0.2s ease; }
       .btn-cassette.active .led { background: radial-gradient(circle at 30% 30%, #16a34a, #166534); box-shadow: 0 0 10px #16a34aaa; }
     </style>
@@ -78,6 +91,22 @@
 
     <script type="text/babel">
       const { useEffect, useMemo, useRef, useState, useCallback } = React;
+
+      // Haptics (best-effort): usa Vibration API se disponibile; throttle per non spammare
+      const useHaptics = () => {
+        const lastRef = useRef(0);
+        const vibrate = (duration = 10) => {
+          try { if (navigator?.vibrate) navigator.vibrate(duration); } catch {}
+        };
+        const light = useCallback(() => {
+          const now = Date.now();
+          if (now - lastRef.current < 35) return; // throttle ~30Hz
+          lastRef.current = now;
+          vibrate(8);
+        }, []);
+        const medium = useCallback(() => vibrate(15), []);
+        return { light, medium };
+      };
 
       function useWebSocket(url) {
         const [status, setStatus] = useState('disconnected');
@@ -126,7 +155,7 @@
         return { status, messages, send };
       }
 
-      function SliderVertical({ title, value, onChange, onInteractStart }) {
+      function SliderVertical({ title, value, onChange, onInteractStart, haptic }) {
         const ref = useRef(null);
 
         const setFromEvent = useCallback((clientY) => {
@@ -141,13 +170,16 @@
         useEffect(() => {
           const el = ref.current;
           if (!el) return;
-          const onPointerDown = (e) => { e.preventDefault(); onInteractStart?.(); el.setPointerCapture?.(e.pointerId); setFromEvent(e.clientY); };
-          const onPointerMove = (e) => { if (e.buttons !== 1) return; setFromEvent(e.clientY); };
+          const onPointerDown = (e) => { e.preventDefault(); onInteractStart?.(); el.classList.add('active'); el.setPointerCapture?.(e.pointerId); setFromEvent(e.clientY); haptic?.medium?.(); };
+          const onPointerMove = (e) => { if (e.buttons !== 1) { el.classList.remove('active'); return; } setFromEvent(e.clientY); haptic?.light?.(); };
+          const onPointerUp = () => { el.classList.remove('active'); };
           el.addEventListener('pointerdown', onPointerDown);
           el.addEventListener('pointermove', onPointerMove);
+          el.addEventListener('pointerup', onPointerUp);
           return () => {
             el.removeEventListener('pointerdown', onPointerDown);
             el.removeEventListener('pointermove', onPointerMove);
+            el.removeEventListener('pointerup', onPointerUp);
           };
         }, [setFromEvent]);
 
@@ -171,13 +203,14 @@
       }
 
       function App() {
+        const haptics = useHaptics();
         const [host, setHost] = useState(window.location.hostname || 'localhost');
         const [devPort, setDevPort] = useState('443');
         const [path, setPath] = useState('');
         const [input, setInput] = useState('');
         const [showAdvanced, setShowAdvanced] = useState(false);
         const [slider1, setSlider1] = useState(0.0);
-        const [button, setButton] = useState(null); // 0,1,3 or null
+        const [button, setButton] = useState(null); // 0,1,2,3 or null
         const [sliderInteracted, setSliderInteracted] = useState(false);
         const prevSliderRef = useRef(slider1);
 
@@ -210,83 +243,74 @@
         return (
           <div className="card">
             <header>
-              <h1>Socket Controls</h1>
+              <h1>Scenario Control</h1>
               <div className="topbar-actions">
                 <div className="status">
                   <span className={dotClass}></span>
                   <span>{status}</span>
                 </div>
-                <button className="ghost" onClick={() => setShowAdvanced(s => !s)}>{showAdvanced ? 'Nascondi pannello' : 'Mostra pannello'}</button>
+                <button aria-label="Apri console" className="hamburger" onClick={() => setShowAdvanced(s => !s)}>
+                  <span></span><span></span><span></span>
+                </button>
               </div>
             </header>
 
             {/* Sliders area - mobile first */}
             <div className="sliders">
-              <SliderVertical title="slider1" value={slider1} onChange={setSlider1} onInteractStart={() => setSliderInteracted(true)} />
+              <SliderVertical title="slider1" value={slider1} onChange={setSlider1} onInteractStart={() => setSliderInteracted(true)} haptic={haptics} />
             </div>
 
             <div className="buttons">
-              <button className={`btn-cassette ${button===0?'active':''}`} onClick={() => { setButton(0); sendAll(slider1, 0); }}>
+              <button aria-label="Button 0" className={`btn-cassette ${button===0?'active':''}`} onClick={() => { setButton(0); sendAll(slider1, 0); haptics.medium(); }}>
                 <span className="led"></span>
-                <span className="label">Pulsante 1</span>
+                <span className="label"></span>
               </button>
-              <button className={`btn-cassette ${button===1?'active':''}`} onClick={() => { setButton(1); sendAll(slider1, 1); }}>
+              <button aria-label="Button 1" className={`btn-cassette ${button===1?'active':''}`} onClick={() => { setButton(1); sendAll(slider1, 1); haptics.medium(); }}>
                 <span className="led"></span>
-                <span className="label">Pulsante 2</span>
+                <span className="label"></span>
               </button>
-              <button className={`btn-cassette ${button===3?'active':''}`} onClick={() => { setButton(3); sendAll(slider1, 3); }}>
+              <button aria-label="Button 2" className={`btn-cassette ${button===2?'active':''}`} onClick={() => { setButton(2); sendAll(slider1, 2); haptics.medium(); }}>
                 <span className="led"></span>
-                <span className="label">Pulsante 3</span>
+                <span className="label"></span>
+              </button>
+              <button aria-label="Custom Text" className={`btn-cassette ${button===3?'active':''}`} onClick={() => { setButton(3); sendAll(slider1, 3); haptics.medium(); }}>
+                <span className="led"></span>
+                <span className="label"></span>
               </button>
             </div>
-
-            {showAdvanced && (
-              <div className="content">
-                <div>
-                  <div className="messages" id="messages">
-                    {[...messages].slice(-200).reverse().map((m, i) => (
-                      <div key={i} className={`msg ${m.type}`}>
-                        {m.text}
-                      </div>
-                    ))}
+            <div className={`drawer ${showAdvanced ? 'open' : ''}`}>
+              <header>
+                <h1>Console</h1>
+              </header>
+              <div className="scroll">
+                <div className="messages" id="messages">
+                  {[...messages].slice(-200).reverse().map((m, i) => (
+                    <div key={i} className={`msg ${m.type}`}>
+                      {m.text}
+                    </div>
+                  ))}
+                </div>
+                <div className="row" style={{ marginTop: 12 }}>
+                  <label>Host</label>
+                  <input value={host} onChange={e => setHost(e.target.value)} />
+                </div>
+                <div className="row">
+                  <label>Dev WS Port</label>
+                  <input value={devPort} onChange={e => setDevPort(e.target.value)} />
+                </div>
+                <div className="row">
+                  <label>WS Path (opzionale)</label>
+                  <input placeholder="es. socket" value={path} onChange={e => setPath(e.target.value)} />
+                </div>
+                <div className="row">
+                  <label>Invia testo</label>
+                  <div className="actions">
+                    <input style={{ flex: 1 }} placeholder="Scrivi e invia" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { send(input.trim()); setInput(''); } }} />
+                    <button className="primary" onClick={() => { if (input.trim()) { send(input.trim()); setInput(''); } }}>Invia</button>
                   </div>
                 </div>
-
-                <aside className="sidebar">
-                  <div className="row">
-                    <label>Host</label>
-                    <input value={host} onChange={e => setHost(e.target.value)} />
-                  </div>
-                  <div className="row">
-                    <label>Dev WS Port</label>
-                    <input value={devPort} onChange={e => setDevPort(e.target.value)} />
-                  </div>
-                  <div className="row">
-                    <label>WS Path (opzionale)</label>
-                    <input placeholder="es. socket" value={path} onChange={e => setPath(e.target.value)} />
-                  </div>
-                  <div className="row">
-                    <label>Azioni</label>
-                    <div className="actions">
-                      <button onClick={() => window.location.reload()}>Riconnetti</button>
-                      <button className="primary" onClick={() => send('Hello from client')}>Invia Hello</button>
-                    </div>
-                  </div>
-                </aside>
               </div>
-            )}
-
-            {showAdvanced && (
-              <footer>
-                <input
-                  placeholder="Scrivi un messaggio e premi Invia"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { send(input.trim()); setInput(''); } }}
-                />
-                <button className="primary" onClick={() => { if (input.trim()) { send(input.trim()); setInput(''); } }}>Invia</button>
-              </footer>
-            )}
+            </div>
           </div>
         );
       }
