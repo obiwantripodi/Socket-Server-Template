@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat - React</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#22c55e; --danger:#ef4444; }
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; margin: 0; }
+      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(180deg, #0b1022, #0f172a); color: var(--text); }
+      .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+      .card { background: rgba(17,24,39,0.7); border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; backdrop-filter: blur(6px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden; }
+      header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(148,163,184,0.12); }
+      header h1 { font-size: 18px; margin: 0; }
+      .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+      .dot { width: 10px; height: 10px; border-radius: 999px; background: gray; box-shadow: 0 0 10px currentColor; }
+      .dot.connected { background: var(--accent); }
+      .dot.disconnected { background: var(--danger); }
+      .content { display: grid; grid-template-columns: 1fr 320px; gap: 16px; padding: 16px; }
+      @media (max-width: 800px) { .content { grid-template-columns: 1fr; } }
+      .messages { background: rgba(2,6,23,0.35); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px; min-height: 260px; max-height: 50vh; overflow: auto; padding: 12px; }
+      .msg { padding: 10px 12px; margin: 8px 0; border-radius: 10px; line-height: 1.35; border: 1px solid rgba(148,163,184,0.12); }
+      .msg.self { background: rgba(34,197,94,0.1); }
+      .msg.other { background: rgba(59,130,246,0.08); }
+      .msg.system { background: rgba(148,163,184,0.10); color: var(--muted); font-size: 13px; }
+      .sidebar { background: rgba(2,6,23,0.35); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px; padding: 12px; display: grid; gap: 10px; align-content: start; }
+      .row { display: grid; gap: 8px; }
+      label { font-size: 12px; color: var(--muted); }
+      input, button, select { font: inherit; }
+      input, select { width: 100%; padding: 10px 12px; background: #0b1220; color: var(--text); border: 1px solid rgba(148,163,184,0.2); border-radius: 8px; outline: none; }
+      input:focus, select:focus { border-color: rgba(34,197,94,0.7); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+      .actions { display: flex; gap: 8px; }
+      button { padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.25); background: #0b1220; color: var(--text); cursor: pointer; transition: transform 0.05s ease; }
+      button.primary { background: linear-gradient(135deg, #22c55e, #16a34a); border: none; }
+      button:active { transform: translateY(1px); }
+      footer { padding: 12px 16px; border-top: 1px solid rgba(148,163,184,0.12); display: flex; gap: 8px; }
+      footer input { flex: 1; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="root"></div>
+    </div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React;
+
+      function useWebSocket(url) {
+        const [status, setStatus] = useState('disconnected');
+        const [messages, setMessages] = useState([]);
+        const wsRef = useRef(null);
+
+        useEffect(() => {
+          const ws = new WebSocket(url);
+          wsRef.current = ws;
+          setStatus('connecting');
+
+          ws.addEventListener('open', () => {
+            setStatus('connected');
+            setMessages(m => [...m, { type: 'system', text: 'Connesso al server' }]);
+          });
+
+          ws.addEventListener('message', (evt) => {
+            const data = evt.data;
+            if (data === 'ping') {
+              // Rispondi al keepalive del server
+              ws.send('pong');
+              return;
+            }
+            setMessages(m => [...m, { type: 'other', text: data }]);
+          });
+
+          ws.addEventListener('close', () => {
+            setStatus('disconnected');
+            setMessages(m => [...m, { type: 'system', text: 'Disconnesso' }]);
+          });
+
+          ws.addEventListener('error', () => {
+            setMessages(m => [...m, { type: 'system', text: 'Errore WebSocket' }]);
+          });
+
+          return () => { ws.close(); };
+        }, [url]);
+
+        const send = (text) => {
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(text);
+            setMessages(m => [...m, { type: 'self', text }]);
+          }
+        };
+
+        return { status, messages, send };
+      }
+
+      function App() {
+        const [host, setHost] = useState(window.location.hostname || 'localhost');
+        const [devPort, setDevPort] = useState('5001');
+        const [path, setPath] = useState('');
+        const [input, setInput] = useState('');
+
+        const wsUrl = useMemo(() => {
+          const isProd = window.location.protocol === 'https:' || window.location.port !== '3000';
+          // Il server in dev usa ws://localhost:5001, in prod va in wss sullo stesso host
+          if (!isProd) return `ws://${host}:${devPort}${path ? '/' + path : ''}`;
+          return `wss://${host}${path ? '/' + path : ''}`;
+        }, [host, devPort, path]);
+
+        const { status, messages, send } = useWebSocket(wsUrl);
+
+        const dotClass = 'dot ' + (status === 'connected' ? 'connected' : 'disconnected');
+
+        return (
+          <div className="card">
+            <header>
+              <h1>Socket Server Template</h1>
+              <div className="status">
+                <span className={dotClass}></span>
+                <span>{status}</span>
+              </div>
+            </header>
+
+            <div className="content">
+              <div>
+                <div className="messages" id="messages">
+                  {messages.map((m, i) => (
+                    <div key={i} className={`msg ${m.type}`}>
+                      {m.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <aside className="sidebar">
+                <div className="row">
+                  <label>Host</label>
+                  <input value={host} onChange={e => setHost(e.target.value)} />
+                </div>
+                <div className="row">
+                  <label>Dev WS Port</label>
+                  <input value={devPort} onChange={e => setDevPort(e.target.value)} />
+                </div>
+                <div className="row">
+                  <label>WS Path (opzionale)</label>
+                  <input placeholder="es. socket" value={path} onChange={e => setPath(e.target.value)} />
+                </div>
+                <div className="row">
+                  <label>Azioni</label>
+                  <div className="actions">
+                    <button onClick={() => window.location.reload()}>Riconnetti</button>
+                    <button className="primary" onClick={() => send('Hello from client')}>Invia Hello</button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+            <footer>
+              <input
+                placeholder="Scrivi un messaggio e premi Invia"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { send(input.trim()); setInput(''); } }}
+              />
+              <button className="primary" onClick={() => { if (input.trim()) { send(input.trim()); setInput(''); } }}>Invia</button>
+            </footer>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+  </html>
+
+
