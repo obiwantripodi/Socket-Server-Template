@@ -54,7 +54,11 @@
         box-shadow: inset 0 2px 3px #ffffffa6, inset 0 -8px 16px #00000029, 0 10px 20px #00000024; }
       .slider-vertical .ticks { position: absolute; left: 50%; top: 12px; bottom: 12px; width: 60%; transform: translateX(-50%); opacity: 0.25; background-image: repeating-linear-gradient(to top, #c6bfae 0 1px, transparent 1px 9%); pointer-events: none; mix-blend-mode: multiply; }
       .slider-vertical .fill { position: absolute; left: 10px; right: 10px; bottom: 10px; border-radius: 12px; height: var(--fill, 0%); background: linear-gradient(180deg, #b8c1c7, #8f9aa3); box-shadow: inset 0 1px 2px #ffffff80, inset 0 -8px 14px #00000029; border: 1px solid #b1b8bf; }
-      .slider-vertical .thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 84px; height: 30px; border-radius: 10px; background: linear-gradient(180deg, #e5ded0, #d8cfbb); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -2px 6px #00000033, 0 6px 14px #00000024; touch-action: none; }
+      .slider-vertical .thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 84px; height: 30px; border-radius: 10px; background:
+        linear-gradient(180deg, #f7f7f7 0%, #bfc3c7 40%, #8e9499 60%, #e9ecee 100%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 6px, rgba(255,255,255,0.08) 6px 10px);
+        border: 1px solid #c8ccd0; box-shadow: inset 0 1px 0 #ffffffcc, inset 0 -2px 6px #00000033, 0 8px 16px #00000035; touch-action: none; }
+      .slider-vertical .thumb::after { content: ""; position: absolute; inset: 0; border-radius: 10px; background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.35) 10%, transparent 35%, transparent 65%, rgba(0,0,0,0.12) 85%, transparent 100%); pointer-events: none; }
       .slider-vertical.active::after { content: ""; position: absolute; inset: 10px; border-radius: 14px; background: repeating-linear-gradient( to top, rgba(0,0,0,0.06), rgba(0,0,0,0.06) 2px, transparent 2px, transparent 6px ); mix-blend-mode: multiply; opacity: 0.35; animation: scrollStripes 120ms linear infinite; }
       @keyframes scrollStripes { from { background-position-y: 0; } to { background-position-y: -8px; } }
       .topbar-actions { display: inline-flex; gap: 10px; align-items: center; }
@@ -77,6 +81,12 @@
       /* Slider tactile */
       .slider-vertical.active .thumb { box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -2px 6px #00000040, 0 8px 18px #00000030; }
       /* remove per richiesta: niente led sui pulsanti */
+
+      /* Walkman-styled input box */
+      .input-walkman { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 12px; border-radius: 12px; background: linear-gradient(180deg, #fff8ea, #eee4cf); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 #ffffffbf, inset 0 -4px 8px #00000024; }
+      .input-walkman input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #1b2d1b; background: #0a0f0a; color: #29ff84; font-family: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.25px; box-shadow: inset 0 0 0 1px #0f190f, 0 0 10px rgba(41,255,132,0.08); outline: none; }
+      .input-walkman input::placeholder { color: #1cff7a99; }
+      .btn-send { min-width: 86px; }
     </style>
   </head>
   <body>
@@ -212,7 +222,7 @@
         }, [value]);
 
         const fill = `${(value * 100).toFixed(1)}%`;
-        const thumbBottom = `calc(${fill} - 28px)`;
+        const thumbBottom = `calc(${fill} + 10px - 15px)`; // align knob with fill top (10px inset, ~15px half height)
 
         return (
           <div className="slider-card">
@@ -330,9 +340,9 @@
             {button === 3 && (
               <div className="row">
                 <label style={{ color:'#4b5563' }}>Custom text</label>
-                <div className="actions">
-                  <input style={{ flex: 1 }} placeholder="Scrivi un messaggio..." value={input} onChange={e => setInput(e.target.value)} />
-                  <button className="primary" onClick={() => { sendAll(slider1, 3, input); sound.clack(); setSentOk(true); setTimeout(()=>setSentOk(false), 1000); }}>Invia</button>
+                <div className="input-walkman">
+                  <input placeholder="Scrivi un messaggio..." value={input} onChange={e => setInput(e.target.value)} />
+                  <button className="btn-cassette btn-send" onClick={() => { sendAll(slider1, 3, input); sound.clack(); setSentOk(true); setTimeout(()=>setSentOk(false), 1000); }}>Invia</button>
                 </div>
               </div>
             )}
