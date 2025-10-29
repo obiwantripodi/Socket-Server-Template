@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebSocket Chat - React</title>
+    <title>WebSocket Control - React</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
@@ -12,9 +12,9 @@
       * { box-sizing: border-box; }
       html, body, #root { height: 100%; margin: 0; }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(180deg, #0b1022, #0f172a); color: var(--text); }
-      .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+      .container { max-width: 900px; margin: 0 auto; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
       .card { background: rgba(17,24,39,0.7); border: 1px solid rgba(148,163,184,0.15); border-radius: 16px; backdrop-filter: blur(6px); box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden; }
-      header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(148,163,184,0.12); }
+      header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(148,163,184,0.12); position: sticky; top: 0; background: rgba(17,24,39,0.75); backdrop-filter: blur(6px); z-index: 2; }
       header h1 { font-size: 18px; margin: 0; }
       .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
       .dot { width: 10px; height: 10px; border-radius: 999px; background: gray; box-shadow: 0 0 10px currentColor; }
@@ -22,7 +22,7 @@
       .dot.disconnected { background: var(--danger); }
       .content { display: grid; grid-template-columns: 1fr 320px; gap: 16px; padding: 16px; }
       @media (max-width: 800px) { .content { grid-template-columns: 1fr; } }
-      .messages { background: rgba(2,6,23,0.35); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px; min-height: 260px; max-height: 50vh; overflow: auto; padding: 12px; }
+      .messages { background: rgba(2,6,23,0.35); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px; min-height: 160px; max-height: 40vh; overflow: auto; padding: 12px; }
       .msg { padding: 10px 12px; margin: 8px 0; border-radius: 10px; line-height: 1.35; border: 1px solid rgba(148,163,184,0.12); }
       .msg.self { background: rgba(34,197,94,0.1); }
       .msg.other { background: rgba(59,130,246,0.08); }
@@ -39,6 +39,24 @@
       button:active { transform: translateY(1px); }
       footer { padding: 12px 16px; border-top: 1px solid rgba(148,163,184,0.12); display: flex; gap: 8px; }
       footer input { flex: 1; }
+
+      /* Sliders layout */
+      .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; }
+      @media (max-width: 480px) { .sliders { grid-template-columns: 1fr 1fr; gap: 12px; } }
+      .slider-card { position: relative; background: rgba(2,6,23,0.35); border: 1px solid rgba(148,163,184,0.12); border-radius: 16px; padding: 16px; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; }
+      .slider-title { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--muted); }
+      .slider-value { font-weight: 600; color: var(--text); }
+      .slider-vertical { position: relative; height: 52vh; min-height: 360px; border-radius: 14px; background: rgba(11,18,32,0.9); border: 1px solid rgba(148,163,184,0.18); overflow: hidden; touch-action: none; }
+      /* iridescent liquid fill */
+      .slider-vertical .liquid { position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill, 0%); background: linear-gradient(180deg, rgba(56,189,248,0.9), rgba(99,102,241,0.9) 35%, rgba(236,72,153,0.9) 70%, rgba(34,197,94,0.9)); filter: saturate(130%) brightness(1.05); }
+      .slider-vertical .sheen { position: absolute; inset: 0; background: radial-gradient(120% 50% at 50% 100%, rgba(255,255,255,0.25), transparent 60%), radial-gradient(80% 40% at 30% 90%, rgba(255,255,255,0.18), transparent 60%); mix-blend-mode: screen; pointer-events: none; animation: shimmer 6s ease-in-out infinite; }
+      @keyframes shimmer { 0% { opacity: 0.5; transform: translateY(0); } 50% { opacity: 0.85; transform: translateY(-6%); } 100% { opacity: 0.5; transform: translateY(0); } }
+      .slider-vertical .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.10) 1px, transparent 1px); background-size: 100% 10%, 10% 100%; opacity: 0.35; pointer-events: none; }
+      .slider-vertical .thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 56px; height: 56px; border-radius: 16px; background: radial-gradient(120% 100% at 30% 20%, #ffffffaa, #ffffff44 40%, #ffffff11 70%, #ffffff05); border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(4px); box-shadow: 0 10px 25px rgba(0,0,0,0.35); touch-action: none; }
+      .slider-vertical .track-overlay { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(to top, black var(--fill,0%), transparent calc(var(--fill,0%) + 0.5px)); mask-image: linear-gradient(to top, black var(--fill,0%), transparent calc(var(--fill,0%) + 0.5px)); }
+      .slider-vertical .hint { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 12px; color: var(--muted); pointer-events: none; }
+      .topbar-actions { display: inline-flex; gap: 8px; align-items: center; }
+      .ghost { background: transparent; border: 1px solid rgba(148,163,184,0.3); }
     </style>
   </head>
   <body>
@@ -51,7 +69,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useRef, useState } = React;
+      const { useEffect, useMemo, useRef, useState, useCallback } = React;
 
       function useWebSocket(url) {
         const [status, setStatus] = useState('disconnected');
@@ -100,11 +118,60 @@
         return { status, messages, send };
       }
 
+      function SliderVertical({ title, value, onChange }) {
+        const ref = useRef(null);
+
+        const setFromEvent = useCallback((clientY) => {
+          const el = ref.current;
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const rel = (rect.bottom - clientY) / rect.height; // bottom=0, top=1
+          const clamped = Math.min(1, Math.max(0, rel));
+          onChange(parseFloat(clamped.toFixed(3)));
+        }, [onChange]);
+
+        useEffect(() => {
+          const el = ref.current;
+          if (!el) return;
+          const onPointerDown = (e) => { e.preventDefault(); el.setPointerCapture?.(e.pointerId); setFromEvent(e.clientY); };
+          const onPointerMove = (e) => { if (e.buttons !== 1) return; setFromEvent(e.clientY); };
+          el.addEventListener('pointerdown', onPointerDown);
+          el.addEventListener('pointermove', onPointerMove);
+          return () => {
+            el.removeEventListener('pointerdown', onPointerDown);
+            el.removeEventListener('pointermove', onPointerMove);
+          };
+        }, [setFromEvent]);
+
+        const fill = `${(value * 100).toFixed(1)}%`;
+        const thumbBottom = `calc(${fill} - 28px)`;
+
+        return (
+          <div className="slider-card">
+            <div className="slider-title">
+              <span>{title}</span>
+              <span className="slider-value">{value.toFixed(3)}</span>
+            </div>
+            <div className="slider-vertical" ref={ref} style={{ '--fill': fill }}>
+              <div className="liquid"></div>
+              <div className="sheen"></div>
+              <div className="grid"></div>
+              <div className="thumb" style={{ bottom: thumbBottom }}></div>
+              <div className="track-overlay"></div>
+              <div className="hint">Trascina su/giù</div>
+            </div>
+          </div>
+        );
+      }
+
       function App() {
         const [host, setHost] = useState(window.location.hostname || 'localhost');
         const [devPort, setDevPort] = useState('5001');
         const [path, setPath] = useState('');
         const [input, setInput] = useState('');
+        const [showAdvanced, setShowAdvanced] = useState(false);
+        const [slider1, setSlider1] = useState(0.0);
+        const [slider2, setSlider2] = useState(0.0);
 
         const wsUrl = useMemo(() => {
           const isProd = window.location.protocol === 'https:' || window.location.port !== '3000';
@@ -115,61 +182,80 @@
 
         const { status, messages, send } = useWebSocket(wsUrl);
 
+        // send both slider values whenever one changes
+        useEffect(() => {
+          const payload = JSON.stringify({ slider1, slider2 });
+          send(payload);
+        }, [slider1, slider2]);
+
         const dotClass = 'dot ' + (status === 'connected' ? 'connected' : 'disconnected');
 
         return (
           <div className="card">
             <header>
-              <h1>Socket Server Template</h1>
-              <div className="status">
-                <span className={dotClass}></span>
-                <span>{status}</span>
+              <h1>Socket Controls</h1>
+              <div className="topbar-actions">
+                <div className="status">
+                  <span className={dotClass}></span>
+                  <span>{status}</span>
+                </div>
+                <button className="ghost" onClick={() => setShowAdvanced(s => !s)}>{showAdvanced ? 'Nascondi pannello' : 'Mostra pannello'}</button>
               </div>
             </header>
 
-            <div className="content">
-              <div>
-                <div className="messages" id="messages">
-                  {messages.map((m, i) => (
-                    <div key={i} className={`msg ${m.type}`}>
-                      {m.text}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <aside className="sidebar">
-                <div className="row">
-                  <label>Host</label>
-                  <input value={host} onChange={e => setHost(e.target.value)} />
-                </div>
-                <div className="row">
-                  <label>Dev WS Port</label>
-                  <input value={devPort} onChange={e => setDevPort(e.target.value)} />
-                </div>
-                <div className="row">
-                  <label>WS Path (opzionale)</label>
-                  <input placeholder="es. socket" value={path} onChange={e => setPath(e.target.value)} />
-                </div>
-                <div className="row">
-                  <label>Azioni</label>
-                  <div className="actions">
-                    <button onClick={() => window.location.reload()}>Riconnetti</button>
-                    <button className="primary" onClick={() => send('Hello from client')}>Invia Hello</button>
-                  </div>
-                </div>
-              </aside>
+            {/* Sliders area - mobile first */}
+            <div className="sliders">
+              <SliderVertical title="slider1" value={slider1} onChange={setSlider1} />
+              <SliderVertical title="slider2" value={slider2} onChange={setSlider2} />
             </div>
 
-            <footer>
-              <input
-                placeholder="Scrivi un messaggio e premi Invia"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { send(input.trim()); setInput(''); } }}
-              />
-              <button className="primary" onClick={() => { if (input.trim()) { send(input.trim()); setInput(''); } }}>Invia</button>
-            </footer>
+            {showAdvanced && (
+              <div className="content">
+                <div>
+                  <div className="messages" id="messages">
+                    {messages.map((m, i) => (
+                      <div key={i} className={`msg ${m.type}`}>
+                        {m.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <aside className="sidebar">
+                  <div className="row">
+                    <label>Host</label>
+                    <input value={host} onChange={e => setHost(e.target.value)} />
+                  </div>
+                  <div className="row">
+                    <label>Dev WS Port</label>
+                    <input value={devPort} onChange={e => setDevPort(e.target.value)} />
+                  </div>
+                  <div className="row">
+                    <label>WS Path (opzionale)</label>
+                    <input placeholder="es. socket" value={path} onChange={e => setPath(e.target.value)} />
+                  </div>
+                  <div className="row">
+                    <label>Azioni</label>
+                    <div className="actions">
+                      <button onClick={() => window.location.reload()}>Riconnetti</button>
+                      <button className="primary" onClick={() => send('Hello from client')}>Invia Hello</button>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            )}
+
+            {showAdvanced && (
+              <footer>
+                <input
+                  placeholder="Scrivi un messaggio e premi Invia"
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && input.trim()) { send(input.trim()); setInput(''); } }}
+                />
+                <button className="primary" onClick={() => { if (input.trim()) { send(input.trim()); setInput(''); } }}>Invia</button>
+              </footer>
+            )}
           </div>
         );
       }
