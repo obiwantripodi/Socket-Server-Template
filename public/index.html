@@ -47,13 +47,11 @@
       .slider-title { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--muted); }
       .slider-value { font-weight: 600; color: var(--text); }
       .slider-vertical { position: relative; height: 52vh; min-height: 360px; border-radius: 18px; background: radial-gradient(100% 120% at 50% 100%, rgba(11,18,32,0.95), rgba(11,18,32,0.85)); border: 1px solid rgba(148,163,184,0.18); overflow: hidden; touch-action: none; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.35), inset 0 10px 20px rgba(255,255,255,0.02); }
-      /* iridescent liquid fill */
-      .slider-vertical .liquid { position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill, 0%); background: conic-gradient(from 180deg at 50% 100%, rgba(56,189,248,0.95), rgba(99,102,241,0.95), rgba(236,72,153,0.95), rgba(34,197,94,0.95), rgba(56,189,248,0.95)); filter: saturate(140%) brightness(1.06); }
-      .slider-vertical .sheen { position: absolute; inset: 0; background: radial-gradient(120% 50% at 50% 100%, rgba(255,255,255,0.25), transparent 60%), radial-gradient(80% 40% at 30% 90%, rgba(255,255,255,0.18), transparent 60%); mix-blend-mode: screen; pointer-events: none; animation: shimmer 6s ease-in-out infinite; }
-      @keyframes shimmer { 0% { opacity: 0.5; transform: translateY(0); } 50% { opacity: 0.85; transform: translateY(-6%); } 100% { opacity: 0.5; transform: translateY(0); } }
-      .slider-vertical .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.10) 1px, transparent 1px); background-size: 100% 10%, 10% 100%; opacity: 0.35; pointer-events: none; }
-      .slider-vertical .thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 64px; height: 64px; border-radius: 18px; background: radial-gradient(120% 100% at 30% 20%, #ffffffb5, #ffffff44 40%, #ffffff12 70%, #ffffff08); border: 1px solid rgba(255,255,255,0.28); backdrop-filter: blur(6px); box-shadow: 0 16px 32px rgba(0,0,0,0.45); touch-action: none; }
-      .slider-vertical .track-overlay { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(to top, black var(--fill,0%), transparent calc(var(--fill,0%) + 0.5px)); mask-image: linear-gradient(to top, black var(--fill,0%), transparent calc(var(--fill,0%) + 0.5px)); }
+      /* skeuomorphic cassette-style track */
+      .slider-vertical::before { content: ""; position: absolute; inset: 10px; border-radius: 14px; background: linear-gradient(180deg, #0c1329, #0a1022); box-shadow: inset 0 2px 3px rgba(255,255,255,0.06), inset 0 -8px 16px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.35); }
+      .slider-vertical .ticks { position: absolute; left: 50%; top: 12px; bottom: 12px; width: 60%; transform: translateX(-50%); opacity: 0.25; background-image: repeating-linear-gradient(to top, rgba(255,255,255,0.45) 0 1px, transparent 1px 8%); pointer-events: none; }
+      .slider-vertical .fill { position: absolute; left: 10px; right: 10px; bottom: 10px; border-radius: 12px; height: var(--fill, 0%); background: linear-gradient(180deg, #0b132a, #0b1125); box-shadow: inset 0 1px 2px rgba(255,255,255,0.05), inset 0 -8px 14px rgba(0,0,0,0.45); border: 1px solid rgba(148,163,184,0.2); }
+      .slider-vertical .thumb { position: absolute; left: 50%; transform: translate(-50%, 50%); width: 70px; height: 28px; border-radius: 10px; background: linear-gradient(180deg, #121a34, #0e152c); border: 1px solid rgba(255,255,255,0.15); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -2px 6px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.4); touch-action: none; }
       .slider-vertical .hint { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 12px; color: var(--muted); pointer-events: none; }
       .topbar-actions { display: inline-flex; gap: 8px; align-items: center; }
       .ghost { background: transparent; border: 1px solid rgba(148,163,184,0.3); }
@@ -126,7 +124,7 @@
         return { status, messages, send };
       }
 
-      function SliderVertical({ title, value, onChange }) {
+      function SliderVertical({ title, value, onChange, onInteractStart }) {
         const ref = useRef(null);
 
         const setFromEvent = useCallback((clientY) => {
@@ -141,7 +139,7 @@
         useEffect(() => {
           const el = ref.current;
           if (!el) return;
-          const onPointerDown = (e) => { e.preventDefault(); el.setPointerCapture?.(e.pointerId); setFromEvent(e.clientY); };
+          const onPointerDown = (e) => { e.preventDefault(); onInteractStart?.(); el.setPointerCapture?.(e.pointerId); setFromEvent(e.clientY); };
           const onPointerMove = (e) => { if (e.buttons !== 1) return; setFromEvent(e.clientY); };
           el.addEventListener('pointerdown', onPointerDown);
           el.addEventListener('pointermove', onPointerMove);
@@ -161,11 +159,9 @@
               <span className="slider-value">{value.toFixed(3)}</span>
             </div>
             <div className="slider-vertical" ref={ref} style={{ '--fill': fill }}>
-              <div className="liquid"></div>
-              <div className="sheen"></div>
-              <div className="grid"></div>
+              <div className="ticks"></div>
+              <div className="fill"></div>
               <div className="thumb" style={{ bottom: thumbBottom }}></div>
-              <div className="track-overlay"></div>
               <div className="hint">Trascina su/giù</div>
             </div>
           </div>
@@ -179,6 +175,8 @@
         const [input, setInput] = useState('');
         const [showAdvanced, setShowAdvanced] = useState(false);
         const [slider1, setSlider1] = useState(0.0);
+        const [sliderInteracted, setSliderInteracted] = useState(false);
+        const prevSliderRef = useRef(slider1);
 
         const wsUrl = useMemo(() => {
           const isProd = window.location.protocol === 'https:' || window.location.port !== '3000';
@@ -194,8 +192,15 @@
           try { send(JSON.stringify({ [name]: value })); } catch {}
         }, [send]);
 
-        // send slider1 as {"slider1": value}
-        useEffect(() => { sendKV('slider1', slider1); }, [slider1, sendKV]);
+        // send slider1 ONLY on actual user-led value changes (not on mount)
+        useEffect(() => {
+          if (!sliderInteracted) return;
+          const prev = prevSliderRef.current;
+          if (Math.abs(prev - slider1) >= 0.001) {
+            sendKV('slider1', slider1);
+            prevSliderRef.current = slider1;
+          }
+        }, [slider1, sliderInteracted, sendKV]);
 
         const dotClass = 'dot ' + (status === 'connected' ? 'connected' : 'disconnected');
 
@@ -214,7 +219,7 @@
 
             {/* Sliders area - mobile first */}
             <div className="sliders">
-              <SliderVertical title="slider1" value={slider1} onChange={setSlider1} />
+              <SliderVertical title="slider1" value={slider1} onChange={setSlider1} onInteractStart={() => setSliderInteracted(true)} />
             </div>
 
             <div className="buttons">
