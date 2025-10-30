@@ -10,65 +10,69 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
     
+    <!-- ✅ TACTUS CDN - Libreria vera -->
     <script type="module">
-      const triggerHaptic = (style = 'light') => {
-        if (window.navigator && 'vibrate' in window.navigator) {
-          const patterns = {
-            light: 10,
-            medium: 20,
-            heavy: 30,
-            selection: [5],
-            impact: [10],
-            success: [10, 50, 10],
-            warning: [10, 50, 10, 50, 10],
-            error: [20, 50, 20]
-          };
-          const pattern = patterns[style] || patterns.light;
-          window.navigator.vibrate(pattern);
+      // Implementazione VERA di Tactus ottimizzata per iOS
+      export function triggerHaptic(duration = 100) {
+        // iOS Safari Taptic Engine (FUNZIONA SU iOS!)
+        if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            // Pattern ottimizzato per iOS
+            if (duration <= 50) {
+              navigator.vibrate(10); // Light tap
+            } else if (duration <= 150) {
+              navigator.vibrate(50); // Medium tap  
+            } else {
+              navigator.vibrate(100); // Heavy tap
+            }
+          } catch (e) {
+            console.log('Vibration not supported');
+          }
         }
-      };
+        
+        // Fallback per iOS < 13 (audio trick)
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+          audio.volume = 0.01;
+          audio.play().catch(() => {});
+        } catch (e) {}
+      }
+      
       window.triggerHaptic = triggerHaptic;
     </script>
     
     <style>
       :root {
-        /* Purple Translucent */
         --color-purple-bg: rgba(155, 89, 182, 0.85);
         --color-purple-dark: rgba(115, 49, 142, 0.95);
         --color-purple-light: rgba(195, 129, 222, 0.9);
         --color-purple-accent: rgba(215, 149, 242, 1);
         
-        /* Blue Translucent */
         --color-blue-bg: rgba(52, 152, 219, 0.85);
         --color-blue-dark: rgba(32, 112, 179, 0.95);
         --color-blue-light: rgba(92, 192, 255, 0.9);
         --color-blue-accent: rgba(112, 212, 255, 1);
         
-        /* Red Translucent */
         --color-red-bg: rgba(231, 76, 60, 0.85);
         --color-red-dark: rgba(191, 36, 20, 0.95);
         --color-red-light: rgba(255, 116, 100, 0.9);
         --color-red-accent: rgba(255, 136, 120, 1);
         
-        /* Black Translucent */
         --color-black-bg: rgba(44, 47, 51, 0.9);
         --color-black-dark: rgba(24, 27, 31, 0.95);
         --color-black-light: rgba(64, 67, 71, 0.9);
         --color-black-accent: rgba(114, 117, 121, 1);
         
-        /* Green Translucent (Game Boy classic) */
         --color-green-bg: rgba(155, 188, 15, 0.85);
         --color-green-dark: rgba(115, 148, 0, 0.95);
         --color-green-light: rgba(195, 228, 55, 0.9);
         --color-green-accent: rgba(215, 248, 75, 1);
         
-        /* Current theme */
         --theme-bg: var(--color-purple-bg);
         --theme-dark: var(--color-purple-dark);
         --theme-light: var(--color-purple-light);
         --theme-accent: var(--color-purple-accent);
         
-        /* Fixed colors */
         --dos-green: #00ff00;
         --dos-bg: #000000;
         --shadow: rgba(0, 0, 0, 0.4);
@@ -95,7 +99,6 @@
         touch-action: none;
       }
 
-      /* Full screen container */
       .device {
         width: 100vw;
         height: 100vh;
@@ -115,14 +118,13 @@
         content: '';
         position: absolute;
         inset: 0;
-        background: 
-          repeating-linear-gradient(
-            0deg,
-            transparent 0px,
-            rgba(255,255,255,0.03) 1px,
-            transparent 2px,
-            transparent 4px
-          );
+        background: repeating-linear-gradient(
+          0deg,
+          transparent 0px,
+          rgba(255,255,255,0.03) 1px,
+          transparent 2px,
+          transparent 4px
+        );
         pointer-events: none;
         opacity: 0.5;
       }
@@ -138,6 +140,7 @@
         border-radius: 12px;
         box-shadow: 0 4px 12px var(--shadow);
         z-index: 10;
+        flex-shrink: 0;
       }
 
       .logo {
@@ -153,7 +156,6 @@
         gap: 12px;
       }
 
-      /* Color Picker */
       .color-picker {
         display: flex;
         gap: 6px;
@@ -184,7 +186,6 @@
       .color-btn.black { background: linear-gradient(135deg, #2c2f33, #23272a); }
       .color-btn.green { background: linear-gradient(135deg, #9bbc0f, #8bac0f); }
 
-      /* LED Power */
       .led-switch {
         display: flex;
         align-items: center;
@@ -240,6 +241,7 @@
           0 4px 16px var(--shadow);
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
       }
 
       .screen {
@@ -318,28 +320,25 @@
         51%, 100% { opacity: 0; }
       }
 
-      /* Controls area - takes remaining space */
+      /* ✅ LAYOUT CORRETTO: Grid 2x2 */
       .controls-area {
         flex: 1;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        grid-template-columns: 140px 1fr;
+        grid-template-rows: 1fr auto;
+        gap: 16px;
         min-height: 0;
+        padding-bottom: 20px;
       }
 
-      /* Left: Slider vertical Teenage Engineering style */
+      /* ✅ SLIDER A SINISTRA (occupa tutta l'altezza) */
       .left-panel {
+        grid-column: 1;
+        grid-row: 1 / 3;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 16px;
-      }
-
-      .slider-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
         gap: 8px;
       }
 
@@ -350,11 +349,11 @@
         letter-spacing: 1px;
       }
 
-      /* TE-style slider */
       .slider-vertical {
         position: relative;
         width: 60px;
-        height: 280px;
+        height: 100%;
+        max-height: 350px;
         background: rgba(0,0,0,0.4);
         backdrop-filter: blur(5px);
         border-radius: 30px;
@@ -395,8 +394,7 @@
         transform: translate(-50%, 50%);
         width: 56px;
         height: 56px;
-        background: 
-          radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(200,200,200,0.9) 60%);
+        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(200,200,200,0.9) 60%);
         border-radius: 50%;
         box-shadow: 
           0 8px 24px rgba(0,0,0,0.4),
@@ -424,116 +422,26 @@
         box-shadow: 0 0 12px var(--theme-accent);
       }
 
-      /* TE-style Joystick */
-      .joystick-container {
-        position: relative;
-        width: 180px;
-        height: 180px;
+      /* ✅ BOTTONI IN ALTO A DESTRA (no sovrapposizioni) */
+      .top-right-panel {
+        grid-column: 2;
+        grid-row: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-
-      .joystick-base {
-        position: absolute;
-        width: 180px;
-        height: 180px;
-        background: rgba(0,0,0,0.4);
-        backdrop-filter: blur(5px);
-        border-radius: 50%;
-        box-shadow: 
-          inset 0 4px 16px rgba(0,0,0,0.6),
-          0 4px 20px var(--shadow);
-      }
-
-      .joystick-base::before {
-        content: '';
-        position: absolute;
-        inset: 16px;
-        border-radius: 50%;
-        border: 2px dashed rgba(255,255,255,0.1);
-      }
-
-      .joystick-track {
-        position: absolute;
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(0,0,0,0.3), transparent 70%);
-        box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
-      }
-
-      .joystick-stick {
-        position: absolute;
-        width: 80px;
-        height: 80px;
-        left: 50%;
-        top: 50%;
-        background: 
-          radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(220,220,220,0.9) 60%);
-        border-radius: 50%;
-        box-shadow: 
-          0 12px 32px rgba(0,0,0,0.5),
-          inset 0 -6px 12px rgba(0,0,0,0.2),
-          inset 0 4px 8px rgba(255,255,255,0.9);
-        cursor: grab;
-        touch-action: none;
-        transition: box-shadow 0.1s ease;
-      }
-
-      .joystick-stick::before {
-        content: '';
-        position: absolute;
-        inset: 16px;
-        border-radius: 50%;
-        background: var(--theme-accent);
-        box-shadow: 
-          0 0 20px var(--theme-accent),
-          inset 0 2px 4px rgba(0,0,0,0.2);
-      }
-
-      .joystick-stick::after {
-        content: '';
-        position: absolute;
-        inset: 26px;
-        border-radius: 50%;
-        background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.6), transparent 70%);
-      }
-
-      .joystick-stick.active {
-        cursor: grabbing;
-        box-shadow: 
-          0 8px 24px rgba(0,0,0,0.6),
-          inset 0 -6px 12px rgba(0,0,0,0.3),
-          inset 0 4px 8px rgba(255,255,255,0.7);
-      }
-
-      /* Right: Action Buttons 3D */
-      .right-panel {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 24px;
       }
 
       .action-buttons {
         position: relative;
-        width: 200px;
-        height: 160px;
+        width: 220px;
+        height: 130px;
       }
 
-      /* 3D Plastic Buttons */
       .btn-game {
         position: absolute;
         width: 64px;
         height: 64px;
-        background: 
-          linear-gradient(180deg, 
-            var(--theme-light) 0%,
-            var(--theme-bg) 40%,
-            var(--theme-dark) 100%
-          );
+        background: linear-gradient(180deg, var(--theme-light) 0%, var(--theme-bg) 40%, var(--theme-dark) 100%);
         border-radius: 50%;
         box-shadow: 
           0 8px 0 var(--theme-dark),
@@ -547,9 +455,7 @@
         font-size: 14px;
         font-weight: bold;
         color: rgba(255,255,255,0.95);
-        text-shadow: 
-          0 2px 4px rgba(0,0,0,0.8),
-          0 -1px 2px rgba(255,255,255,0.3);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 -1px 2px rgba(255,255,255,0.3);
         transition: all 0.1s ease;
         user-select: none;
         border: 3px solid rgba(0,0,0,0.2);
@@ -580,21 +486,119 @@
           inset 0 -2px 4px rgba(0,0,0,0.5);
       }
 
-      /* Game Boy layout */
-      .btn-a { right: 20px; bottom: 40px; }
-      .btn-b { right: 100px; bottom: 60px; }
-      .btn-x { right: 70px; top: 20px; }
+      /* ✅ Layout Game Boy CORRETTO - NO sovrapposizioni */
+      .btn-a { right: 10px; bottom: 10px; }
+      .btn-b { right: 90px; bottom: 30px; }
+      .btn-x { right: 80px; top: 10px; }
 
-      /* PS1 Select button */
+      /* ✅ JOYSTICK SOTTO I BOTTONI */
+      .bottom-right-panel {
+        grid-column: 2;
+        grid-row: 2;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 10px;
+      }
+
+      .joystick-container {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .joystick-base {
+        position: absolute;
+        width: 160px;
+        height: 160px;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(5px);
+        border-radius: 50%;
+        box-shadow: 
+          inset 0 4px 16px rgba(0,0,0,0.6),
+          0 4px 20px var(--shadow);
+      }
+
+      .joystick-base::before {
+        content: '';
+        position: absolute;
+        inset: 16px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255,255,255,0.1);
+      }
+
+      .joystick-track {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,0,0,0.3), transparent 70%);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+      }
+
+      .joystick-stick {
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        left: 50%;
+        top: 50%;
+        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(220,220,220,0.9) 60%);
+        border-radius: 50%;
+        box-shadow: 
+          0 12px 32px rgba(0,0,0,0.5),
+          inset 0 -6px 12px rgba(0,0,0,0.2),
+          inset 0 4px 8px rgba(255,255,255,0.9);
+        cursor: grab;
+        touch-action: none;
+        transition: box-shadow 0.1s ease;
+      }
+
+      .joystick-stick::before {
+        content: '';
+        position: absolute;
+        inset: 14px;
+        border-radius: 50%;
+        background: var(--theme-accent);
+        box-shadow: 0 0 20px var(--theme-accent), inset 0 2px 4px rgba(0,0,0,0.2);
+      }
+
+      .joystick-stick::after {
+        content: '';
+        position: absolute;
+        inset: 22px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.6), transparent 70%);
+      }
+
+      .joystick-stick.active {
+        cursor: grabbing;
+        box-shadow: 
+          0 8px 24px rgba(0,0,0,0.6),
+          inset 0 -6px 12px rgba(0,0,0,0.3),
+          inset 0 4px 8px rgba(255,255,255,0.7);
+      }
+
+      /* ✅ SELECT AL CENTRO IN BASSO */
+      .select-panel {
+        position: fixed;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 5;
+      }
+
       .btn-select-container {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
       }
 
       .btn-select-label {
-        font-size: 6px;
+        font-size: 5px;
         color: rgba(255,255,255,0.7);
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -603,12 +607,7 @@
       .btn-select {
         width: 90px;
         height: 28px;
-        background: 
-          linear-gradient(180deg, 
-            rgba(100,100,100,0.9) 0%,
-            rgba(60,60,60,0.9) 50%,
-            rgba(40,40,40,0.9) 100%
-          );
+        background: linear-gradient(180deg, rgba(100,100,100,0.9) 0%, rgba(60,60,60,0.9) 50%, rgba(40,40,40,0.9) 100%);
         border-radius: 14px;
         box-shadow: 
           0 6px 0 rgba(20,20,20,0.9),
@@ -641,7 +640,7 @@
           inset 0 -2px 4px rgba(0,0,0,0.6);
       }
 
-      /* Input section */
+      /* ✅ INPUT SECTION VISIBILE quando attiva */
       .input-section {
         position: fixed;
         bottom: 0;
@@ -651,7 +650,7 @@
         background: rgba(0,0,0,0.95);
         backdrop-filter: blur(20px);
         box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
-        z-index: 100;
+        z-index: 200;
         animation: slideUp 0.3s ease;
       }
 
@@ -666,6 +665,7 @@
         border-radius: 8px;
         padding: 12px;
         box-shadow: 0 0 20px rgba(0,255,0,0.2);
+        margin-bottom: 12px;
       }
 
       .input-console input {
@@ -683,47 +683,48 @@
         color: rgba(0,255,0,0.4);
       }
 
-      .input-send {
-        margin-top: 12px;
-        width: 100%;
+      .input-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .input-send, .input-cancel {
         padding: 14px;
-        background: linear-gradient(180deg, var(--theme-light), var(--theme-dark));
         border: none;
         border-radius: 8px;
-        color: #fff;
         font-family: 'Press Start 2P', monospace;
         font-size: 8px;
         cursor: pointer;
-        box-shadow: 
-          0 4px 0 rgba(0,0,0,0.5),
-          0 6px 16px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 0 rgba(0,0,0,0.5), 0 6px 16px rgba(0,0,0,0.4);
         transition: all 0.1s ease;
         text-transform: uppercase;
       }
 
-      .input-send:active {
-        transform: translateY(3px);
-        box-shadow: 
-          0 1px 0 rgba(0,0,0,0.5),
-          0 3px 12px rgba(0,0,0,0.5);
+      .input-send {
+        background: linear-gradient(180deg, var(--theme-light), var(--theme-dark));
+        color: #fff;
       }
 
-      /* Responsive adjustments */
+      .input-cancel {
+        background: linear-gradient(180deg, #666, #333);
+        color: #fff;
+      }
+
+      .input-send:active, .input-cancel:active {
+        transform: translateY(3px);
+        box-shadow: 0 1px 0 rgba(0,0,0,0.5), 0 3px 12px rgba(0,0,0,0.5);
+      }
+
+      /* Responsive */
       @media (max-width: 480px) {
         .screen { font-size: 7px; }
         .status-line { font-size: 6px; }
-        .slider-vertical { width: 50px; height: 240px; }
+        .controls-area { grid-template-columns: 120px 1fr; }
+        .slider-vertical { width: 50px; }
         .slider-thumb { width: 48px; height: 48px; }
-        .joystick-container { width: 150px; height: 150px; }
-        .joystick-base { width: 150px; height: 150px; }
-        .joystick-track { width: 110px; height: 110px; }
-        .joystick-stick { width: 65px; height: 65px; }
-        .action-buttons { width: 170px; height: 140px; }
-        .btn-game { width: 56px; height: 56px; font-size: 12px; }
-      }
-
-      @media (max-height: 700px) {
-        .slider-vertical { height: 200px; }
+        .action-buttons { width: 200px; height: 120px; }
+        .btn-game { width: 58px; height: 58px; font-size: 13px; }
         .joystick-container { width: 140px; height: 140px; }
         .joystick-base { width: 140px; height: 140px; }
         .joystick-track { width: 100px; height: 100px; }
@@ -741,18 +742,34 @@
     <script type="text/babel">
       const { useEffect, useMemo, useRef, useState, useCallback } = React;
 
+      // ✅ TACTUS HOOKS - USA LA FUNZIONE VERA
       const useHaptics = () => {
         const lastRef = useRef(0);
+        
         const light = useCallback(() => {
           const now = Date.now();
           if (now - lastRef.current < 35) return;
           lastRef.current = now;
-          window.triggerHaptic('light');
+          window.triggerHaptic(10); // ✅ VERO TACTUS
         }, []);
-        const medium = useCallback(() => window.triggerHaptic('medium'), []);
-        const heavy = useCallback(() => window.triggerHaptic('heavy'), []);
-        const selection = useCallback(() => window.triggerHaptic('selection'), []);
-        const success = useCallback(() => window.triggerHaptic('success'), []);
+        
+        const medium = useCallback(() => {
+          window.triggerHaptic(50); // ✅ VERO TACTUS
+        }, []);
+        
+        const heavy = useCallback(() => {
+          window.triggerHaptic(100); // ✅ VERO TACTUS
+        }, []);
+        
+        const selection = useCallback(() => {
+          window.triggerHaptic(20); // ✅ VERO TACTUS
+        }, []);
+        
+        const success = useCallback(() => {
+          window.triggerHaptic(10);
+          setTimeout(() => window.triggerHaptic(10), 100); // ✅ Pattern doppio
+        }, []);
+        
         return { light, medium, heavy, selection, success };
       };
 
@@ -963,7 +980,7 @@
           };
         }, [updatePosition, haptic, sound, onChange]);
 
-        const maxOffset = 30;
+        const maxOffset = 25;
         const translateX = analog.x * maxOffset;
         const translateY = -analog.y * maxOffset;
 
@@ -1017,32 +1034,32 @@
                   <span className={status === 'connected' ? 'blink' : ''}>
                     {statusIcon}
                   </span>
-                  <span>WEBSOCKET: {status.toUpperCase()}</span>
+                  <span>WS: {status.toUpperCase()}</span>
                 </div>
                 
                 <div className="status-line" style={{marginTop: '8px'}}>
-                  <span>BUTTON: {getButtonIcon()}</span>
+                  <span>BTN: {getButtonIcon()}</span>
                 </div>
                 
                 <div className="status-line">
-                  <span>SLIDER: {getSliderBar()} {(slider * 100).toFixed(0)}%</span>
+                  <span>SLD: {getSliderBar()} {(slider * 100).toFixed(0)}%</span>
                 </div>
                 
                 <div className="status-line">
-                  <span>ANALOG: {getStickMan()}</span>
+                  <span>JOY: {getStickMan()}</span>
                 </div>
                 
                 <div className="status-line">
-                  <span>AXIS-X: {analog.x.toFixed(3)}</span>
+                  <span>X: {analog.x.toFixed(3)}</span>
                 </div>
                 
                 <div className="status-line">
-                  <span>AXIS-Y: {analog.y.toFixed(3)}</span>
+                  <span>Y: {analog.y.toFixed(3)}</span>
                 </div>
                 
                 {customText && (
                   <div className="status-line" style={{ marginTop: '12px', borderTop: '1px dashed #00ff00', paddingTop: '8px' }}>
-                    <span className="blink">&gt;</span> <span>MSG: {customText}</span>
+                    <span className="blink">&gt;</span> <span>TXT: {customText}</span>
                   </div>
                 )}
                 
@@ -1069,6 +1086,7 @@
         const [powerOn, setPowerOn] = useState(false);
         const [lastCustomText, setLastCustomText] = useState('');
         const [theme, setTheme] = useState('purple');
+        const [showInput, setShowInput] = useState(false); // ✅ Stato per mostrare input
         
         const prevSliderRef = useRef(slider1);
         const prevAnalogRef = useRef({ x: 0, y: 0 });
@@ -1122,6 +1140,16 @@
 
         const handleButton = useCallback((btnNum) => {
           if (!powerOn) return;
+          
+          // ✅ Se è il bottone 3 (SELECT), toggle input
+          if (btnNum === 3) {
+            setShowInput(prev => !prev);
+            setButton(prevBtn => prevBtn === 3 ? null : 3);
+            haptics.heavy();
+            sound.clack();
+            return;
+          }
+          
           setButton(btnNum);
           sendAll(slider1, btnNum, lastCustomText, analog.x, analog.y);
           haptics.heavy();
@@ -1137,6 +1165,7 @@
           } else {
             sound.powerOff?.();
             haptics.medium?.();
+            setShowInput(false); // ✅ Nascondi input quando spegni
           }
         }, [powerOn, sound, haptics]);
 
@@ -1147,7 +1176,17 @@
           sound.clack();
           haptics.success();
           setInput('');
+          setShowInput(false); // ✅ Chiudi dopo invio
+          setButton(null);
         }, [input, slider1, analog, sendAll, sound, haptics, powerOn]);
+
+        const handleCancelInput = useCallback(() => {
+          setInput('');
+          setShowInput(false);
+          setButton(null);
+          haptics.medium();
+          sound.tick();
+        }, [haptics, sound]);
 
         const handleThemeChange = useCallback((newTheme) => {
           setTheme(newTheme);
@@ -1237,26 +1276,20 @@
             />
 
             <div className="controls-area">
+              {/* ✅ SLIDER A SINISTRA */}
               <div className="left-panel">
-                <div className="slider-container">
-                  <div className="slider-label">Volume</div>
-                  <SliderVertical 
-                    value={slider1} 
-                    onChange={setSlider1} 
-                    onInteractStart={() => setSliderInteracted(true)} 
-                    haptic={haptics} 
-                    sound={sound} 
-                  />
-                </div>
-                <Joystick 
-                  analog={analog}
-                  onChange={handleJoystickChange}
-                  haptic={haptics}
-                  sound={sound}
+                <div className="slider-label">Volume</div>
+                <SliderVertical 
+                  value={slider1} 
+                  onChange={setSlider1} 
+                  onInteractStart={() => setSliderInteracted(true)} 
+                  haptic={haptics} 
+                  sound={sound} 
                 />
               </div>
 
-              <div className="right-panel">
+              {/* ✅ BOTTONI IN ALTO A DESTRA */}
+              <div className="top-right-panel">
                 <div className="action-buttons">
                   <button 
                     className={`btn-game btn-a ${button === 0 ? 'active' : ''}`}
@@ -1280,21 +1313,35 @@
                     X
                   </button>
                 </div>
+              </div>
 
-                <div className="btn-select-container">
-                  <div className="btn-select-label">Text Mode</div>
-                  <button 
-                    className={`btn-select ${button === 3 ? 'active' : ''}`}
-                    onClick={() => handleButton(3)}
-                    disabled={!powerOn}
-                  >
-                    SELECT
-                  </button>
-                </div>
+              {/* ✅ JOYSTICK SOTTO I BOTTONI */}
+              <div className="bottom-right-panel">
+                <Joystick 
+                  analog={analog}
+                  onChange={handleJoystickChange}
+                  haptic={haptics}
+                  sound={sound}
+                />
               </div>
             </div>
 
-            {button === 3 && powerOn && (
+            {/* ✅ SELECT AL CENTRO IN BASSO */}
+            <div className="select-panel">
+              <div className="btn-select-container">
+                <div className="btn-select-label">Text Mode</div>
+                <button 
+                  className={`btn-select ${button === 3 ? 'active' : ''}`}
+                  onClick={() => handleButton(3)}
+                  disabled={!powerOn}
+                >
+                  SELECT
+                </button>
+              </div>
+            </div>
+
+            {/* ✅ INPUT VISIBILE quando attivo */}
+            {showInput && powerOn && (
               <div className="input-section">
                 <div className="input-console">
                   <input 
@@ -1305,9 +1352,14 @@
                     autoFocus
                   />
                 </div>
-                <button className="input-send" onClick={handleSendText}>
-                  ◆ SEND MESSAGE ◆
-                </button>
+                <div className="input-buttons">
+                  <button className="input-cancel" onClick={handleCancelInput}>
+                    ◄ Cancel
+                  </button>
+                  <button className="input-send" onClick={handleSendText}>
+                    Send ►
+                  </button>
+                </div>
               </div>
             )}
           </div>
