@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>Scenario™ Control</title>
+    <title>SCENARIO™ Control</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
@@ -144,10 +144,11 @@
       }
 
       .logo {
-        font-size: 8px;
-        letter-spacing: 2px;
-        color: rgba(255,255,255,0.9);
+        font-size: 10px;
+        letter-spacing: 3px;
+        color: rgba(255,255,255,0.95);
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        font-weight: bold;
       }
 
       .header-controls {
@@ -228,7 +229,7 @@
         box-shadow: 0 0 12px rgba(255,0,0,0.8);
       }
 
-      /* Console 4:3 */
+      /* Console 4:3 - ✅ CONTENUTO CENTRATO E PIÙ LEGGIBILE */
       .console {
         width: 100%;
         aspect-ratio: 4 / 3;
@@ -249,14 +250,17 @@
         height: 100%;
         background: var(--dos-bg);
         border-radius: 8px;
-        padding: 12px;
+        padding: 16px;
         font-family: 'Press Start 2P', monospace;
-        font-size: 8px;
-        line-height: 1.8;
+        font-size: 10px;
+        line-height: 2;
         color: var(--dos-green);
         overflow-y: auto;
         box-shadow: inset 0 0 30px rgba(0,255,0,0.1);
         position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
 
       .screen::-webkit-scrollbar {
@@ -292,23 +296,24 @@
       }
 
       .screen-header {
-        border-bottom: 1px solid var(--dos-green);
-        padding-bottom: 6px;
-        margin-bottom: 8px;
-        font-size: 9px;
+        border-bottom: 2px solid var(--dos-green);
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+        font-size: 11px;
+        text-align: center;
       }
 
       .screen-content {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 10px;
       }
 
       .status-line {
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 7px;
+        gap: 10px;
+        font-size: 9px;
       }
 
       .blink {
@@ -331,7 +336,7 @@
         padding-bottom: 20px;
       }
 
-      /* ✅ SLIDER A SINISTRA (occupa tutta l'altezza) */
+      /* ✅ SLIDER A SINISTRA - FIX SBORDI */
       .left-panel {
         grid-column: 1;
         grid-row: 1 / 3;
@@ -367,8 +372,8 @@
       .slider-track {
         position: absolute;
         left: 50%;
-        top: 12px;
-        bottom: 12px;
+        top: 40px;
+        bottom: 40px;
         width: 3px;
         background: rgba(255,255,255,0.1);
         transform: translateX(-50%);
@@ -378,7 +383,7 @@
       .slider-fill {
         position: absolute;
         left: 50%;
-        bottom: 12px;
+        bottom: 40px;
         width: 8px;
         height: var(--fill, 0%);
         background: linear-gradient(180deg, var(--theme-accent), var(--theme-light));
@@ -422,7 +427,7 @@
         box-shadow: 0 0 12px var(--theme-accent);
       }
 
-      /* ✅ BOTTONI IN ALTO A DESTRA (no sovrapposizioni) */
+      /* ✅ BOTTONI IN ALTO A DESTRA */
       .top-right-panel {
         grid-column: 2;
         grid-row: 1;
@@ -486,7 +491,7 @@
           inset 0 -2px 4px rgba(0,0,0,0.5);
       }
 
-      /* ✅ Layout Game Boy CORRETTO - NO sovrapposizioni */
+      /* ✅ Layout Game Boy CORRETTO */
       .btn-a { right: 10px; bottom: 10px; }
       .btn-b { right: 90px; bottom: 30px; }
       .btn-x { right: 80px; top: 10px; }
@@ -718,8 +723,8 @@
 
       /* Responsive */
       @media (max-width: 480px) {
-        .screen { font-size: 7px; }
-        .status-line { font-size: 6px; }
+        .screen { font-size: 8px; }
+        .status-line { font-size: 7px; }
         .controls-area { grid-template-columns: 120px 1fr; }
         .slider-vertical { width: 50px; }
         .slider-thumb { width: 48px; height: 48px; }
@@ -742,7 +747,7 @@
     <script type="text/babel">
       const { useEffect, useMemo, useRef, useState, useCallback } = React;
 
-      // ✅ TACTUS HOOKS - USA LA FUNZIONE VERA
+      // ✅ TACTUS HOOKS
       const useHaptics = () => {
         const lastRef = useRef(0);
         
@@ -750,24 +755,24 @@
           const now = Date.now();
           if (now - lastRef.current < 35) return;
           lastRef.current = now;
-          window.triggerHaptic(10); // ✅ VERO TACTUS
+          window.triggerHaptic(10);
         }, []);
         
         const medium = useCallback(() => {
-          window.triggerHaptic(50); // ✅ VERO TACTUS
+          window.triggerHaptic(50);
         }, []);
         
         const heavy = useCallback(() => {
-          window.triggerHaptic(100); // ✅ VERO TACTUS
+          window.triggerHaptic(100);
         }, []);
         
         const selection = useCallback(() => {
-          window.triggerHaptic(20); // ✅ VERO TACTUS
+          window.triggerHaptic(20);
         }, []);
         
         const success = useCallback(() => {
           window.triggerHaptic(10);
-          setTimeout(() => window.triggerHaptic(10), 100); // ✅ Pattern doppio
+          setTimeout(() => window.triggerHaptic(10), 100);
         }, []);
         
         return { light, medium, heavy, selection, success };
@@ -861,9 +866,16 @@
           const el = ref.current;
           if (!el) return;
           const rect = el.getBoundingClientRect();
-          const rel = (rect.bottom - clientY) / rect.height;
-          const clamped = Math.min(1, Math.max(0, rel));
-          onChange(parseFloat(clamped.toFixed(3)));
+          
+          // ✅ FIX: range limitato per evitare sbordi
+          const trackTop = 40;
+          const trackBottom = 40;
+          const trackHeight = rect.height - trackTop - trackBottom;
+          
+          const relativeY = rect.bottom - clientY - trackBottom;
+          const rel = Math.min(1, Math.max(0, relativeY / trackHeight));
+          
+          onChange(parseFloat(rel.toFixed(3)));
         }, [onChange]);
 
         useEffect(() => {
@@ -898,14 +910,19 @@
           }
         }, [value, sound, haptic]);
 
-        const fill = `${(value * 100).toFixed(1)}%`;
-        const thumbBottom = `calc(${fill} - 28px)`;
+        // ✅ Calcolo corretto per evitare sbordi
+        const trackTop = 40;
+        const trackBottom = 40;
+        const thumbHeight = 56;
+        
+        const fillPercent = value * 100;
+        const thumbBottom = trackBottom + (value * (100 - trackTop - trackBottom));
 
         return (
           <div className="slider-vertical" ref={ref}>
             <div className="slider-track"></div>
-            <div className="slider-fill" style={{ height: fill }}></div>
-            <div className="slider-thumb" style={{ bottom: thumbBottom }}></div>
+            <div className="slider-fill" style={{ height: `${fillPercent}%` }}></div>
+            <div className="slider-thumb" style={{ bottom: `calc(${thumbBottom}% - ${thumbHeight/2}px)` }}></div>
           </div>
         );
       }
@@ -1008,15 +1025,30 @@
           return '[' + '█'.repeat(bars) + '░'.repeat(10 - bars) + ']';
         };
 
-        const getStickMan = () => {
+        // ✅ JOYSTICK SENZA "o" - SOLO FRECCE E DIAGONALI
+        const getStickSymbol = () => {
           const threshold = 0.3;
-          if (Math.abs(analog.x) < threshold && Math.abs(analog.y) < threshold) {
-            return 'o|';
+          const absX = Math.abs(analog.x);
+          const absY = Math.abs(analog.y);
+          
+          // Centro
+          if (absX < threshold && absY < threshold) {
+            return '·';
           }
-          if (Math.abs(analog.x) > Math.abs(analog.y)) {
-            return analog.x > 0 ? 'o>' : '<o';
+          
+          // Diagonali (quando entrambi superano la soglia)
+          if (absX > threshold && absY > threshold) {
+            if (analog.x > 0 && analog.y > 0) return '↗'; // Nord-Est
+            if (analog.x < 0 && analog.y > 0) return '↖'; // Nord-Ovest
+            if (analog.x > 0 && analog.y < 0) return '↘'; // Sud-Est
+            if (analog.x < 0 && analog.y < 0) return '↙'; // Sud-Ovest
+          }
+          
+          // Direzioni cardinali
+          if (absX > absY) {
+            return analog.x > 0 ? '>' : '<';
           } else {
-            return analog.y > 0 ? '^o' : 'vo';
+            return analog.y > 0 ? '^' : 'v';
           }
         };
 
@@ -1027,7 +1059,7 @@
           <div className="console">
             <div className="screen">
               <div className="screen-header">
-                SCENARIO™ CONTROL v2.0
+                SCENARIO™ CONTROL
               </div>
               <div className="screen-content">
                 <div className="status-line">
@@ -1046,7 +1078,7 @@
                 </div>
                 
                 <div className="status-line">
-                  <span>JOY: {getStickMan()}</span>
+                  <span>JOY: {getStickSymbol()}</span>
                 </div>
                 
                 <div className="status-line">
@@ -1086,7 +1118,7 @@
         const [powerOn, setPowerOn] = useState(false);
         const [lastCustomText, setLastCustomText] = useState('');
         const [theme, setTheme] = useState('purple');
-        const [showInput, setShowInput] = useState(false); // ✅ Stato per mostrare input
+        const [showInput, setShowInput] = useState(false);
         
         const prevSliderRef = useRef(slider1);
         const prevAnalogRef = useRef({ x: 0, y: 0 });
@@ -1141,7 +1173,6 @@
         const handleButton = useCallback((btnNum) => {
           if (!powerOn) return;
           
-          // ✅ Se è il bottone 3 (SELECT), toggle input
           if (btnNum === 3) {
             setShowInput(prev => !prev);
             setButton(prevBtn => prevBtn === 3 ? null : 3);
@@ -1165,7 +1196,7 @@
           } else {
             sound.powerOff?.();
             haptics.medium?.();
-            setShowInput(false); // ✅ Nascondi input quando spegni
+            setShowInput(false);
           }
         }, [powerOn, sound, haptics]);
 
@@ -1176,7 +1207,7 @@
           sound.clack();
           haptics.success();
           setInput('');
-          setShowInput(false); // ✅ Chiudi dopo invio
+          setShowInput(false);
           setButton(null);
         }, [input, slider1, analog, sendAll, sound, haptics, powerOn]);
 
@@ -1246,7 +1277,7 @@
         return (
           <div className="device">
             <div className="header">
-              <div className="logo">SCENARIO™</div>
+              <div className="logo">TRIPS</div>
               <div className="header-controls">
                 <div className="color-picker">
                   {['purple', 'blue', 'red', 'black', 'green'].map(color => (
@@ -1276,7 +1307,6 @@
             />
 
             <div className="controls-area">
-              {/* ✅ SLIDER A SINISTRA */}
               <div className="left-panel">
                 <div className="slider-label">Volume</div>
                 <SliderVertical 
@@ -1288,7 +1318,6 @@
                 />
               </div>
 
-              {/* ✅ BOTTONI IN ALTO A DESTRA */}
               <div className="top-right-panel">
                 <div className="action-buttons">
                   <button 
@@ -1315,7 +1344,6 @@
                 </div>
               </div>
 
-              {/* ✅ JOYSTICK SOTTO I BOTTONI */}
               <div className="bottom-right-panel">
                 <Joystick 
                   analog={analog}
@@ -1326,7 +1354,6 @@
               </div>
             </div>
 
-            {/* ✅ SELECT AL CENTRO IN BASSO */}
             <div className="select-panel">
               <div className="btn-select-container">
                 <div className="btn-select-label">Text Mode</div>
@@ -1340,7 +1367,6 @@
               </div>
             </div>
 
-            {/* ✅ INPUT VISIBILE quando attivo */}
             {showInput && powerOn && (
               <div className="input-section">
                 <div className="input-console">
