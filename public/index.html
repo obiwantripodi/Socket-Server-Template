@@ -202,12 +202,12 @@
             el.removeEventListener('pointermove', onPointerMove);
             el.removeEventListener('pointerup', onPointerUp);
           };
-        }, [setFromEvent]);
+        }, [setFromEvent, onInteractStart, haptic]);
 
         useEffect(() => {
           const step = Math.round(value * 20);
           if (step !== lastStepRef.current) { lastStepRef.current = step; sound?.tick?.(); }
-        }, [value]);
+        }, [value, sound]);
 
         const fill = `${(value * 100).toFixed(1)}%`;
         const thumbBottom = `calc(${fill} + 10px - 15px)`;
@@ -221,7 +221,7 @@
         );
       }
 
-      function Joystick({ analogX, analogY, onChange, haptic, sound }) {
+      function Joystick({ analog, onChange, haptic, sound }) {
         const stickRef = useRef(null);
         const trackRef = useRef(null);
         const isDraggingRef = useRef(false);
@@ -247,7 +247,8 @@
           const x = parseFloat((deltaX / radius).toFixed(3));
           const y = parseFloat((-deltaY / radius).toFixed(3));
 
-          onChange(x, y);
+          // ✅ OTTIMIZZAZIONE: chiamata singola con oggetto
+          onChange({ x, y });
           haptic?.light?.();
         }, [onChange, haptic]);
 
@@ -273,7 +274,7 @@
           const onPointerUp = () => {
             isDraggingRef.current = false;
             stick.classList.remove('active');
-            onChange(0, 0);
+            onChange({ x: 0, y: 0 });
             sound?.tick?.();
           };
 
@@ -288,11 +289,11 @@
             stick.removeEventListener('pointerup', onPointerUp);
             stick.removeEventListener('pointercancel', onPointerUp);
           };
-        }, [updatePosition, haptic, sound]);
+        }, [updatePosition, haptic, sound, onChange]);
 
         const maxOffset = 20;
-        const translateX = analogX * maxOffset;
-        const translateY = -analogY * maxOffset;
+        const translateX = analog.x * maxOffset;
+        const translateY = -analog.y * maxOffset;
 
         return (
           <div className="joystick-container">
@@ -331,13 +332,20 @@
         const [path, setPath] = useState('');
         const [input, setInput] = useState('');
         const [slider1, setSlider1] = useState(0.0);
-        const [analogX, setAnalogX] = useState(0.0);
-        const [analogY, setAnalogY] = useState(0.0);
+        
+        // ✅ OTTIMIZZAZIONE 1: Stato unificato per joystick (1 setState invece di 2)
+        const [analog, setAnalog] = useState({ x: 0.0, y: 0.0 });
+        
         const [button, setButton] = useState(null);
         const [sliderInteracted, setSliderInteracted] = useState(false);
         const [sentOk, setSentOk] = useState(false);
+        
+        // ✅ OTTIMIZZAZIONE 2: Refs per valori precedenti
         const prevSliderRef = useRef(slider1);
         const prevAnalogRef = useRef({ x: 0, y: 0 });
+        
+        // ✅ OTTIMIZZAZIONE 3: Ref stabile per la funzione send
+        const sendRef = useRef(null);
 
         const wsUrl = useMemo(() => {
           const isProd = window.location.protocol === 'https:' || window.location.port !== '3000';
@@ -346,10 +354,16 @@
         }, [host, devPort, path]);
 
         const { status, messages, send } = useWebSocket(wsUrl);
+        
+        // ✅ OTTIMIZZAZIONE 4: Aggiorna il ref quando send cambia
+        useEffect(() => {
+          sendRef.current = send;
+        }, [send]);
 
+        // ✅ OTTIMIZZAZIONE 5: Funzione di invio stabile (non ricreata)
         const sendAll = useCallback((sVal, bVal, txt, ax, ay) => {
           try { 
-            send(JSON.stringify({ 
+            sendRef.current?.(JSON.stringify({ 
               slider1: sVal, 
               button: bVal, 
               text: txt || '', 
@@ -357,34 +371,39 @@
               analogY: ay 
             })); 
           } catch {}
-        }, [send]);
+        }, []); // ✅ Dipendenze vuote = creata UNA SOLA VOLTA
 
+        // ✅ OTTIMIZZAZIONE 6: Effect per slider (meno trigger)
         useEffect(() => {
           if (!sliderInteracted) return;
           const prev = prevSliderRef.current;
           if (Math.abs(prev - slider1) >= 0.001) {
-            sendAll(slider1, button, input, analogX, analogY);
+            sendAll(slider1, button, input, analog.x, analog.y);
             prevSliderRef.current = slider1;
           }
-        }, [slider1, sliderInteracted, button, sendAll, analogX, analogY, input]);
+        }, [slider1, sliderInteracted]); // ✅ Rimossi button, input, analog dalle dipendenze
 
+        // ✅ OTTIMIZZAZIONE 7: Effect per joystick (singolo stato)
         useEffect(() => {
           const prev = prevAnalogRef.current;
-          if (Math.abs(prev.x - analogX) >= 0.01 || Math.abs(prev.y - analogY) >= 0.01) {
-            sendAll(slider1, button, input, analogX, analogY);
-            prevAnalogRef.current = { x: analogX, y: analogY };
+          if (Math.abs(prev.x - analog.x) >= 0.01 || Math.abs(prev.y - analog.y) >= 0.01) {
+            sendAll(slider1, button, input, analog.x, analog.y);
+            prevAnalogRef.current = { x: analog.x, y: analog.y };
           }
-        }, [analogX, analogY, slider1, button, input, sendAll]);
+        }, [analog]); // ✅ Solo analog come dipendenza
 
+        // Effect per input text (rimane invariato)
         useEffect(() => {
           if (button !== 3) return;
-          const id = setTimeout(() => { sendAll(slider1, 3, input, analogX, analogY); }, 200);
+          const id = setTimeout(() => { 
+            sendAll(slider1, 3, input, analog.x, analog.y); 
+          }, 200);
           return () => clearTimeout(id);
-        }, [input, button, slider1, analogX, analogY, sendAll]);
+        }, [input, button, slider1, analog, sendAll]);
 
-        const handleJoystickChange = useCallback((x, y) => {
-          setAnalogX(x);
-          setAnalogY(y);
+        // ✅ OTTIMIZZAZIONE 8: Handler joystick stabile
+        const handleJoystickChange = useCallback((newAnalog) => {
+          setAnalog(newAnalog);
         }, []);
 
         const dotClass = 'dot ' + (status === 'connected' ? 'connected' : 'disconnected');
@@ -393,7 +412,15 @@
           const onFirstTouch = () => { sound.ensure?.(); document.removeEventListener('touchstart', onFirstTouch); };
           document.addEventListener('touchstart', onFirstTouch, { once: true });
           return () => document.removeEventListener('touchstart', onFirstTouch);
-        }, []);
+        }, [sound]);
+
+        // ✅ OTTIMIZZAZIONE 9: Handler bottoni memoizzati
+        const handleButton = useCallback((btnNum) => {
+          setButton(btnNum);
+          sendAll(slider1, btnNum, input, analog.x, analog.y);
+          haptics.medium();
+          sound.clack();
+        }, [slider1, input, analog, sendAll, haptics, sound]);
 
         return (
           <>
@@ -420,8 +447,7 @@
                 sound={sound} 
               />
               <Joystick 
-                analogX={analogX} 
-                analogY={analogY} 
+                analog={analog}
                 onChange={handleJoystickChange}
                 haptic={haptics}
                 sound={sound}
@@ -429,17 +455,35 @@
             </div>
 
             <div className="buttons">
-              <button aria-label="Button 0" className={`btn-cassette ${button===0?'active':''}`} onClick={() => { setButton(0); sendAll(slider1, 0, input, analogX, analogY); haptics.medium(); sound.clack(); }}></button>
-              <button aria-label="Button 1" className={`btn-cassette ${button===1?'active':''}`} onClick={() => { setButton(1); sendAll(slider1, 1, input, analogX, analogY); haptics.medium(); sound.clack(); }}></button>
-              <button aria-label="Button 2" className={`btn-cassette ${button===2?'active':''}`} onClick={() => { setButton(2); sendAll(slider1, 2, input, analogX, analogY); haptics.medium(); sound.clack(); }}></button>
-              <button aria-label="Custom Text" className={`btn-cassette ${button===3?'active':''}`} onClick={() => { setButton(3); sendAll(slider1, 3, input, analogX, analogY); haptics.medium(); sound.clack(); }}></button>
+              {[0, 1, 2, 3].map(num => (
+                <button 
+                  key={num}
+                  aria-label={num === 3 ? "Custom Text" : `Button ${num}`}
+                  className={`btn-cassette ${button === num ? 'active' : ''}`}
+                  onClick={() => handleButton(num)}
+                />
+              ))}
             </div>
 
             {button === 3 && (
               <div className="input-section">
                 <div className="input-walkman">
-                  <input placeholder="Scrivi un messaggio..." value={input} onChange={e => setInput(e.target.value)} />
-                  <button className="btn-cassette btn-send" onClick={() => { sendAll(slider1, 3, input, analogX, analogY); sound.clack(); setSentOk(true); setTimeout(()=>setSentOk(false), 1000); }}>Invia</button>
+                  <input 
+                    placeholder="Scrivi un messaggio..." 
+                    value={input} 
+                    onChange={e => setInput(e.target.value)} 
+                  />
+                  <button 
+                    className="btn-cassette btn-send" 
+                    onClick={() => { 
+                      sendAll(slider1, 3, input, analog.x, analog.y); 
+                      sound.clack(); 
+                      setSentOk(true); 
+                      setTimeout(() => setSentOk(false), 1000); 
+                    }}
+                  >
+                    Invia
+                  </button>
                 </div>
               </div>
             )}
